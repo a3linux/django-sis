@@ -101,6 +101,15 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'sis', ['Cohort'])
 
+        # Adding M2M table for field students on 'Cohort'
+        m2m_table_name = 'sis_studentcohort'
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('cohort', models.ForeignKey(orm[u'sis.cohort'], null=False)),
+            ('student', models.ForeignKey(orm[u'sis.student'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['cohort_id', 'student_id'])
+
         # Adding model 'PerCourseCohort'
         db.create_table(u'sis_percoursecohort', (
             (u'cohort_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['sis.Cohort'], unique=True, primary_key=True)),
@@ -167,6 +176,15 @@ class Migration(SchemaMigration):
             ('cache_gpa', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=5, decimal_places=2, blank=True)),
         ))
         db.send_create_signal(u'sis', ['Student'])
+
+        # Adding M2M table for field family_access_users on 'Student'
+        m2m_table_name = db.shorten_name(u'sis_student_family_access_users')
+        db.create_table(u'sis_student_family_access_users', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('student', models.ForeignKey(orm[u'sis.student'], null=False)),
+            ('familyaccessuser', models.ForeignKey(orm[u'auth.User'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['student_id', 'familyaccessuser_id'])
 
         # Adding M2M table for field emergency_contacts on 'Student'
         db.create_table(u'sis_student_emergency_contacts', (
@@ -425,6 +443,7 @@ class Migration(SchemaMigration):
         u'schedule.courseenrollment': {
             'Meta': {'unique_together': "(('course', 'user', 'role'),)", 'object_name': 'CourseEnrollment'},
             'attendance_note': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
+            'cache_grade': ('django.db.models.fields.CharField', [], {'max_length': '8', 'blank': 'True'}),
             'course': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['schedule.Course']"}),
             'exclude_days': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['schedule.Day']", 'symmetrical': 'False', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -461,6 +480,7 @@ class Migration(SchemaMigration):
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'end_date': ('django.db.models.fields.DateField', [], {}),
             'friday': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'grades_due': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'monday': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
